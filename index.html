@@ -7,44 +7,62 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main id="game-shell" aria-label="UFO Tank Defender game">
-      <canvas id="game-canvas"></canvas>
+    <div class="app-layout">
+      <main id="game-shell" aria-label="UFO Tank Defender game">
+        <canvas id="game-canvas"></canvas>
 
-      <section class="hud" aria-label="Game status">
-        <div class="stat">
-          <span>Score</span>
-          <strong id="score">0</strong>
-        </div>
-        <div class="stat">
-          <span>Wave</span>
-          <strong id="wave">1</strong>
-        </div>
-        <div class="stat">
-          <span>Hull</span>
-          <strong id="health">100</strong>
-        </div>
-      </section>
+        <section class="hud" aria-label="Game status">
+          <div class="stat">
+            <span>Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="stat">
+            <span>Wave</span>
+            <strong id="wave">1</strong>
+          </div>
+          <div class="stat">
+            <span>Hull</span>
+            <strong id="health">100</strong>
+          </div>
+        </section>
 
-      <section class="controls" aria-label="Controls">
-        <span>Move: A / D</span>
-        <span>Aim: Mouse</span>
-        <span>Fire: Click / Space</span>
-        <span>Pause: P</span>
-      </section>
+        <div id="milestone-message" class="milestone-message" role="status" aria-live="polite"></div>
 
-      <section id="overlay" class="overlay visible">
-        <div class="overlay-panel">
-          <p class="kicker">Low-poly sky defense</p>
-          <h1>UFO Tank Defender</h1>
-          <p>
-            Drive the ridge line, track the saucers overhead, and knock them
-            out before their plasma burns through your hull.
-          </p>
-          <button id="start-button" type="button">Start Mission</button>
+        <section class="controls" aria-label="Controls">
+          <span>Move: A / D</span>
+          <span>Aim: Mouse</span>
+          <span>Fire: Click / Space</span>
+          <span>Pause: P</span>
+        </section>
+
+        <section id="overlay" class="overlay visible">
+          <div class="overlay-panel">
+            <p class="kicker">Low-poly sky defense</p>
+            <h1>UFO Tank Defender</h1>
+            <p>
+              Drive the ridge line, track the saucers overhead, and knock them
+              out before their plasma burns through your hull.
+            </p>
+            <label class="name-field" for="player-name">
+              <span>Pilot name</span>
+              <input id="player-name" name="player-name" type="text" maxlength="18" autocomplete="nickname" placeholder="Your name" />
+            </label>
+            <button id="start-button" type="button">Start Mission</button>
+          </div>
+        </section>
+      </main>
+
+      <aside class="session-board" aria-label="Session scores">
+        <div class="session-head">
+          <span>Session High</span>
+          <strong id="session-high">0</strong>
         </div>
-      </section>
-    </main>
+        <ol id="recent-scores" aria-label="Last 10 scores">
+          <li>No runs yet</li>
+        </ol>
+      </aside>
+    </div>
 
-    <script type="module" src="./src/main.js?v=11"></script>
+    <script type="module" src="./src/main.js?v=14"></script>
   </body>
 </html>

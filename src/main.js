@@ -5,8 +5,13 @@ const gameShell = document.querySelector("#game-shell");
 const scoreEl = document.querySelector("#score");
 const waveEl = document.querySelector("#wave");
 const healthEl = document.querySelector("#health");
+const sessionHighEl = document.querySelector("#session-high");
+const recentScoresEl = document.querySelector("#recent-scores");
+const milestoneMessageEl = document.querySelector("#milestone-message");
 const overlay = document.querySelector("#overlay");
 const startButton = document.querySelector("#start-button");
+const playerNameInput = document.querySelector("#player-name");
+const nameField = document.querySelector(".name-field");
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x071015);
@@ -37,12 +42,27 @@ const enemyBolts = [];
 const particles = [];
 const stars = [];
 const clouds = [];
+const sessionScores = [];
+
+const milestoneMessages = [
+  "{name}, the ridge crew is chanting your name. {score} points and counting.",
+  "Command just marked your file legendary, {name}. {score} points in this run.",
+  "{name}, every UFO pilot above this valley knows your callsign now.",
+  "The sky belongs to you, {name}. {score} points and the saucers are nervous.",
+  "{name}, that was surgical. Another 5000-point barrier is gone.",
+  "Radar says impossible. The scoreboard says {name}: {score}.",
+];
+
+let milestoneTimeout;
 
 const state = {
   running: false,
   paused: false,
   gameOver: false,
+  playerName: "",
   score: 0,
+  sessionHigh: 0,
+  nextMilestone: 5000,
   wave: 1,
   health: 100,
   spawnTimer: 0,
@@ -401,15 +421,72 @@ function createBurst(position, color, count = 14, power = 1) {
   }
 }
 
-function setOverlay(title, copy, buttonText) {
+function sanitizePlayerName(name) {
+  return name.trim().replace(/\s+/g, " ").slice(0, 18);
+}
+
+function setOverlay(title, copy, buttonText, showNameInput = false) {
   overlay.querySelector("h1").textContent = title;
   overlay.querySelector(".overlay-panel p:not(.kicker)").textContent = copy;
   startButton.textContent = buttonText;
+  nameField.classList.toggle("hidden", !showNameInput);
   overlay.classList.add("visible");
+  if (showNameInput) playerNameInput.focus();
 }
 
 function hideOverlay() {
   overlay.classList.remove("visible");
+}
+
+function updateSessionBoard() {
+  sessionHighEl.textContent = state.sessionHigh.toString();
+  recentScoresEl.innerHTML = "";
+
+  if (!sessionScores.length) {
+    const item = document.createElement("li");
+    item.textContent = "No runs yet";
+    recentScoresEl.append(item);
+    return;
+  }
+
+  for (const score of sessionScores) {
+    const item = document.createElement("li");
+    item.textContent = score.toString();
+    recentScoresEl.append(item);
+  }
+}
+
+function recordSessionScore(score) {
+  sessionScores.unshift(score);
+  sessionScores.splice(10);
+  state.sessionHigh = Math.max(state.sessionHigh, score);
+  updateSessionBoard();
+}
+
+function showMilestoneMessage(score) {
+  const index = Math.floor(score / 5000) % milestoneMessages.length;
+  milestoneMessageEl.textContent = milestoneMessages[index]
+    .replace("{name}", state.playerName || "Pilot")
+    .replace("{score}", score.toString());
+  milestoneMessageEl.classList.add("visible");
+
+  window.clearTimeout(milestoneTimeout);
+  milestoneTimeout = window.setTimeout(() => {
+    milestoneMessageEl.classList.remove("visible");
+  }, 4200);
+}
+
+function addScore(points) {
+  state.score += points;
+  state.sessionHigh = Math.max(state.sessionHigh, state.score);
+
+  while (state.score >= state.nextMilestone) {
+    showMilestoneMessage(state.nextMilestone);
+    state.nextMilestone += 5000;
+  }
+
+  updateHud();
+  updateSessionBoard();
 }
 
 async function resetGame() {
@@ -435,6 +512,7 @@ async function resetGame() {
   state.paused = false;
   state.gameOver = false;
   state.score = 0;
+  state.nextMilestone = 5000;
   state.wave = 1;
   state.health = 100;
   state.spawnTimer = 0.3;
@@ -444,6 +522,7 @@ async function resetGame() {
   state.ufosDestroyedThisWave = 0;
   tank.position.set(0, 0, 0);
   updateHud();
+  updateSessionBoard();
   hideOverlay();
 }
 
@@ -518,7 +597,7 @@ function updateProjectiles(delta) {
         createBurst(shot.position, palette.plasma, 16, 1.1);
         hit = true;
         if (ufo.userData.hp <= 0) {
-          state.score += 150 + state.wave * 20;
+          addScore(150 + state.wave * 20);
           state.ufosDestroyedThisWave += 1;
           createBurst(ufo.position, palette.beam, 28, 1.55);
           scene.remove(ufo);
@@ -595,9 +674,10 @@ function nextWave() {
 function endGame() {
   state.running = false;
   state.gameOver = true;
+  recordSessionScore(state.score);
   setOverlay(
     "Mission Failed",
-    `Final score: ${state.score}. The saucers punched through the ridge defense, but the tank is ready for another run.`,
+    `Final score: ${state.score}. Session high: ${state.sessionHigh}. ${state.playerName}, the tank is ready for another run.`,
     "Restart Mission",
   );
 }
@@ -667,10 +747,29 @@ startButton.addEventListener("click", () => {
     hideOverlay();
     return;
   }
+
+  if (!state.playerName) {
+    const playerName = sanitizePlayerName(playerNameInput.value);
+    if (!playerName) {
+      playerNameInput.focus();
+      playerNameInput.setAttribute("placeholder", "Enter a pilot name");
+      return;
+    }
+    state.playerName = playerName;
+    nameField.classList.add("hidden");
+  }
+
   resetGame();
 });
 
 createWorld();
 resize();
 updateHud();
+updateSessionBoard();
+setOverlay(
+  "UFO Tank Defender",
+  "Enter your pilot name, then defend the ridge from the UFO wave overhead.",
+  "Start Mission",
+  true,
+);
 animate();

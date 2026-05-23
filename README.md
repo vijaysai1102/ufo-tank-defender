@@ -16,6 +16,8 @@ no package install, and no backend server beyond a simple local HTTP server.
 - Projectile combat with swept collision, so fast shells can still hit UFOs
   reliably.
 - UFO wave progression, scoring, health, pause, restart, and game-over flow.
+- Session scoreboard showing the highest score and the last 10 completed runs.
+- Pilot-name prompt with personalized milestone messages every 5000 points.
 - Responsive full-screen layout with HUD and controls.
 - Local Three.js dependency files, so the game does not need a CDN at runtime.
 - SVG renderer fallback for browsers that do not expose WebGL.
@@ -37,6 +39,9 @@ http://127.0.0.1:4173/
 | Fire | Mouse click or `Space` |
 | Pause/resume | `P` |
 | Start/restart mission | Start Mission / Restart Mission button |
+
+The game asks for a pilot name before the first run in each browser session.
+That name is used for 5000-point milestone messages during the session.
 
 ## Getting Started
 
@@ -105,6 +110,10 @@ The preferred renderer is `THREE.WebGLRenderer`. If WebGL is not available, the
 game dynamically loads `SVGRenderer` and renders the same Three.js scene as SVG.
 That fallback is useful in restricted browser environments.
 
+Scores are tracked in memory for the current session. When a run ends, its final
+score is added to the last-10 list and the session high score is updated. These
+values reset when the page is refreshed.
+
 ## Gameplay Tuning
 
 Most balancing values live in `src/main.js`:
@@ -115,6 +124,9 @@ Most balancing values live in `src/main.js`:
 - Player shell speed, lifetime, and hit radius are in `createShot()`.
 - UFO damage to the tank is in `updateProjectiles()`.
 - Wave progression and hull repair are in `nextWave()`.
+- Session score history is managed by `recordSessionScore()` and
+  `updateSessionBoard()`.
+- Milestone messages are managed by `addScore()` and `showMilestoneMessage()`.
 
 ## Troubleshooting
 
